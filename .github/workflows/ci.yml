@@ -1,0 +1,54 @@
+name: HELEP CI/CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push user-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/user-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/helep-user-service:latest
+
+      - name: Build and push sos-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/sos-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/helep-sos-service:latest
+
+      - name: Build and push dispatch-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/dispatch-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/helep-dispatch-service:latest
+
+      - name: Build and push notification-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/notification-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/helep-notification-service:latest
+
+      - name: Build and push analytics-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/analytics-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/helep-analytics-service:latest

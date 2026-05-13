@@ -1,0 +1,13 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: user-registered
+  namespace: helep
+  labels:
+    strimzi.io/cluster: kafka-cluster
+spec:
+  topicName: user.registered
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"

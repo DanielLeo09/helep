@@ -1,0 +1,13 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: responder-confirmed
+  namespace: helep
+  labels:
+    strimzi.io/cluster: kafka-cluster
+spec:
+  topicName: responder.confirmed
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: "604800000"

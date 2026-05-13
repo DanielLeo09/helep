@@ -26,21 +26,27 @@ def init() -> None:
             """
             CREATE TABLE IF NOT EXISTS notifications (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                incident_id TEXT,
                 channel     TEXT NOT NULL CHECK(channel IN ('sms','push','email')),
                 recipient   TEXT NOT NULL,
                 template    TEXT NOT NULL,
                 payload     TEXT NOT NULL,
-                created_at  TEXT DEFAULT CURRENT_TIMESTAMP
+                created_at  TEXT DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(incident_id, template)
             );
             """
         )
 
 
-def record(channel: str, recipient: str, template: str, payload: str) -> int:
+def record(channel: str, recipient: str, template: str, payload: str, incident_id: str | None = None) -> int:
+    """Pattern: Idempotency Key — UNIQUE(incident_id, template) prevents duplicate delivery
+    on Kafka at-least-once redelivery. INSERT OR IGNORE silently skips the duplicate row.
+    """
     with conn() as c:
         cur = c.execute(
-            "INSERT INTO notifications (channel, recipient, template, payload) VALUES (?, ?, ?, ?)",
-            (channel, recipient, template, payload),
+            "INSERT OR IGNORE INTO notifications (incident_id, channel, recipient, template, payload) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (incident_id, channel, recipient, template, payload),
         )
         return cur.lastrowid
 

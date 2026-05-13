@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sos-service
+  namespace: helep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sos-service
+  template:
+    metadata:
+      labels:
+        app: sos-service
+    spec:
+      containers:
+        - name: sos-service
+          image: helep/sos-service:latest
+          ports:
+            - containerPort: 8002
+          envFrom:
+            - configMapRef:
+                name: sos-service-config
+            - secretRef:
+                name: sos-service-secret
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8002
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: sos-service-pvc

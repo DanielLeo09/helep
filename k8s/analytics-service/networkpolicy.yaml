@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: analytics-service-netpol
+  namespace: helep
+spec:
+  podSelector:
+    matchLabels:
+      app: analytics-service
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 8005
+    - from:
+        - podSelector: {}
+      ports:
+        - port: 8005
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              strimzi.io/name: kafka-cluster-kafka
+      ports:
+        - port: 9092
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP

@@ -60,7 +60,7 @@ async def on_event(p: dict) -> None:
     channel, name, body_fmt = tmpl
     recipient = p.get("user_id") or p.get("victim_user") or "broadcast"
     msg = body_fmt.format(**{k: p.get(k, "?") for k in ("incident_id", "responder_id", "zone_id")})
-    record(channel, recipient, name, json.dumps({"text": msg, "src": p}))
+    record(channel, recipient, name, json.dumps({"text": msg, "src": p}), incident_id=p.get("incident_id"))
     # Simulated delivery — log line stands in for the SMS gateway call.
     log.info("notification.delivered", channel=channel, template=name, recipient=recipient, body=msg)
     SENT.labels(channel=channel, template=name).inc()

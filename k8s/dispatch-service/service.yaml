@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dispatch-service
+  namespace: helep
+spec:
+  selector:
+    app: dispatch-service
+  ports:
+    - port: 8003
+      targetPort: 8003
+  type: ClusterIP

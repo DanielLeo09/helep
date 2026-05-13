@@ -54,8 +54,30 @@ class CredibilityWeightedMatcher:
         return {"id": best["id"], "score": best_score}
 
 
+class RoundRobinMatcher:
+    """Cycles through available responders in sequence, ignoring location.
+    Useful when all responders are equidistant and equal workload distribution matters.
+    Switch with env var MATCHER=roundrobin.
+    """
+    def __init__(self) -> None:
+        self._index = 0
+
+    def pick(self, victim_lat: float, victim_lon: float, responders: Iterable) -> dict | None:
+        items = list(responders)
+        if not items:
+            return None
+        r = items[self._index % len(items)]
+        self._index += 1
+        return {"id": r["id"], "round_robin_index": self._index - 1}
+
+
+_round_robin = RoundRobinMatcher()
+
+
 def matcher() -> Matcher:
     name = os.getenv("MATCHER", "nearest").lower()
     if name == "credibility":
         return CredibilityWeightedMatcher()
+    if name == "roundrobin":
+        return _round_robin
     return NearestMatcher()

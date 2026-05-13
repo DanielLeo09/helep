@@ -9,14 +9,23 @@ Updated as we complete each part.
 
 | Part | Description | Status |
 |------|-------------|--------|
-| A | Code completions inside the starter | ✅ Done |
-| B | Dockerfiles (one per service) | ⏳ Next |
-| C | Kubernetes manifests | 🔲 Pending |
-| D | Kafka on K8s via Strimzi | 🔲 Pending |
-| E | Prometheus + Grafana monitoring | 🔲 Pending |
-| F | CI/CD pipeline | 🔲 Pending |
+| A — Code | Python starter completions | ✅ Done |
+| A — Docker | Dockerfiles (multi-stage + non-root UID 10001) | ✅ Fixed |
+| B | Helm umbrella chart charts/helep/ | ✅ Done |
+| C | Kubernetes manifests (NetworkPolicy, Namespace, Ingress) | ✅ Done |
+| D | Strimzi Kafka (renamed, persistent storage, PDB) | ✅ Fixed |
+| E | Prometheus + Grafana + dashboard JSON | ✅ Done |
+| F | CI/CD — Jenkinsfile (ci/Jenkinsfile) | ✅ Done |
 | G | L4 Design Process Document | ✅ Written (PDF + diagrams pending) |
 | H | L3 Patterns-in-Code Document | ✅ Written (PDF pending) |
+
+### What the PDF spec revealed we were missing
+- Dockerfiles needed multi-stage build + non-root user (UID ≥ 10001) ← FIXED
+- Part B requires a Helm umbrella chart, not flat YAML ← IN PROGRESS
+- CI/CD must be a Jenkinsfile — GitHub Actions is explicitly forbidden ← TODO
+- Kafka cluster must be named helep-kafka, use persistent storage, have PodDisruptionBudget ← TODO
+- Part E needs kube-prometheus-stack in observability namespace + dashboard JSON file ← TODO
+- Submission must be a zip: matricule-name-helep.zip with specific folder structure ← TODO
 
 ---
 

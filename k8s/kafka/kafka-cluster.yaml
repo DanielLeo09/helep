@@ -1,8 +1,8 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
-  name: kafka-cluster
-  namespace: helep
+  name: helep-kafka
+  namespace: kafka
 spec:
   kafka:
     version: 3.7.0
@@ -18,12 +18,17 @@ spec:
       transaction.state.log.min.isr: 1
       default.replication.factor: 1
       min.insync.replicas: 1
+      auto.create.topics.enable: "false"
     storage:
-      type: ephemeral
+      type: persistent-claim
+      size: 1Gi
+      deleteClaim: false
   zookeeper:
     replicas: 1
     storage:
-      type: ephemeral
+      type: persistent-claim
+      size: 1Gi
+      deleteClaim: false
   entityOperator:
     topicOperator: {}
     userOperator: {}

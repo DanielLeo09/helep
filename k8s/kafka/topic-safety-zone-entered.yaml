@@ -2,9 +2,9 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
   name: safety-zone-entered
-  namespace: helep
+  namespace: kafka
   labels:
-    strimzi.io/cluster: kafka-cluster
+    strimzi.io/cluster: helep-kafka
 spec:
   topicName: safety.zone.entered
   partitions: 3

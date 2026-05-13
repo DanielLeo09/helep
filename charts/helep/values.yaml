@@ -1,0 +1,45 @@
+global:
+  imageRegistry: "danielyomba"
+  imageTag: "0.1.0"
+  kafkaBootstrap: "helep-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
+  jwtSecret: "helep-jwt-secret-change-in-production"
+
+ingress:
+  host: "helep.local"
+  className: "nginx"
+
+user-service:
+  replicaCount: 1
+  image:
+    name: helep-user-service
+  servicePort: 8001
+  dbPath: "/data/user.db"
+
+sos-service:
+  replicaCount: 1
+  image:
+    name: helep-sos-service
+  servicePort: 8002
+  dbPath: "/data/sos.db"
+
+dispatch-service:
+  replicaCount: 1
+  image:
+    name: helep-dispatch-service
+  servicePort: 8003
+  dbPath: "/data/dispatch.db"
+  matcher: "nearest"
+
+notification-service:
+  replicaCount: 1
+  image:
+    name: helep-notification-service
+  servicePort: 8004
+  dbPath: "/data/notification.db"
+
+analytics-service:
+  replicaCount: 1
+  image:
+    name: helep-analytics-service
+  servicePort: 8005
+  dbPath: "/data/analytics.db"

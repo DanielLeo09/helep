@@ -1,0 +1,120 @@
+pipeline {
+    agent any
+
+    environment {
+        REGISTRY      = "danielyomba"
+        IMAGE_TAG     = "0.1.0"
+        SERVICES      = "user-service sos-service dispatch-service notification-service analytics-service"
+        KUBECONFIG    = credentials('kubeconfig')
+        DOCKERHUB_CREDS = credentials('dockerhub-credentials')
+    }
+
+    stages {
+
+        stage('Lint Python') {
+            steps {
+                sh '''
+                    pip install ruff --quiet
+                    for svc in ${SERVICES}; do
+                        echo "Linting services/${svc}"
+                        ruff check services/${svc}/app/
+                    done
+                '''
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                sh '''
+                    for svc in ${SERVICES}; do
+                        echo "Building ${REGISTRY}/helep-${svc}:${IMAGE_TAG}"
+                        docker build -t ${REGISTRY}/helep-${svc}:${IMAGE_TAG} services/${svc}/
+                    done
+                '''
+            }
+        }
+
+        stage('Trivy Image Scan') {
+            steps {
+                sh '''
+                    which trivy || (curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin)
+                    for svc in ${SERVICES}; do
+                        echo "Scanning ${REGISTRY}/helep-${svc}:${IMAGE_TAG}"
+                        trivy image --severity HIGH,CRITICAL --exit-code 1 ${REGISTRY}/helep-${svc}:${IMAGE_TAG}
+                    done
+                '''
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                sh '''
+                    echo ${DOCKERHUB_CREDS_PSW} | docker login -u ${DOCKERHUB_CREDS_USR} --password-stdin
+                    for svc in ${SERVICES}; do
+                        docker push ${REGISTRY}/helep-${svc}:${IMAGE_TAG}
+                    done
+                '''
+            }
+        }
+
+        stage('Deploy to Kubernetes (staging)') {
+            steps {
+                sh '''
+                    kubectl apply -f k8s/namespace.yaml
+                    kubectl apply -f k8s/kafka/kafka-namespace.yaml
+                    helm upgrade --install helep ./charts/helep \
+                        --namespace helep \
+                        --create-namespace \
+                        --set global.imageTag=${IMAGE_TAG} \
+                        --wait --timeout 5m
+                '''
+            }
+        }
+
+        stage('Smoke Test') {
+            steps {
+                sh '''
+                    sleep 15
+                    kubectl run smoke-test --image=curlimages/curl --restart=Never --rm -i \
+                        -n helep -- sh -c "
+                        curl -sf http://user-service:8001/healthz &&
+                        curl -sf http://sos-service:8002/healthz &&
+                        curl -sf http://dispatch-service:8003/healthz &&
+                        curl -sf http://notification-service:8004/healthz &&
+                        curl -sf http://analytics-service:8005/healthz &&
+                        echo All services healthy"
+                '''
+            }
+        }
+
+        stage('Approval Gate — Deploy to Production') {
+            steps {
+                input message: 'Deploy to production namespace?', ok: 'Deploy'
+            }
+        }
+
+        stage('Deploy to Production') {
+            steps {
+                sh '''
+                    helm upgrade --install helep ./charts/helep \
+                        --namespace helep-prod \
+                        --create-namespace \
+                        --set global.imageTag=${IMAGE_TAG} \
+                        --wait --timeout 5m
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker logout || true'
+        }
+        failure {
+            echo 'Pipeline failed — check logs above.'
+        }
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+    }
+}

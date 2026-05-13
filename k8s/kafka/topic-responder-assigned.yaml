@@ -2,9 +2,9 @@ apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
   name: responder-assigned
-  namespace: helep
+  namespace: kafka
   labels:
-    strimzi.io/cluster: kafka-cluster
+    strimzi.io/cluster: helep-kafka
 spec:
   topicName: responder.assigned
   partitions: 3
